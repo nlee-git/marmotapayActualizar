@@ -1,14 +1,30 @@
 # Repositorio marmotapayActualizar
 ![Python](https://img.shields.io/badge/python-3.14-blue.svg)
 
-
 ## Requisitos
-
 Se recomienda ejecutar este proyecto en un entorno virtual, para ello ejecute la siguiente instrucción:
 
 ```
 python3 -m venv .venv
 ```
+Una vez creado el entorno virtual, si no ingresa automaticamente en el puede hacerlo de la siguiente forma:
+```
+source .venv/bin/activate
+```
+```
+source activate
+```
+
+Para desactivarlo puede ejecutar:
+```
+source .venv/bin/deactivate
+```
+```
+deactivate
+```
+
+Considere que la forma de crear y ejecutar el entorno virtual cambia según su sistema operativo, se recomienda revisar la documentación oficial: 
+* [VirtualEnv Documentation](https://docs.python.org/es/3/library/venv.html)   
 
 Las librerias necesarias para ejecutar este desarrollo se encuentran listadas en el archivo requirements.txt
 
