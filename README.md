@@ -11,6 +11,7 @@ Una vez creado el entorno virtual, si no ingresa automaticamente en el puede hac
 ```
 source .venv/bin/activate
 ```
+o también ejecutar
 ```
 source activate
 ```
@@ -19,6 +20,8 @@ Para desactivarlo puede ejecutar:
 ```
 source .venv/bin/deactivate
 ```
+o también ejecutar
+
 ```
 deactivate
 ```
