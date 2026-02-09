@@ -9,65 +9,68 @@ def cargar_lista(path):
 
 def main():
     conn = conectar()
-    cur = conn.cursor()
 
-    lista = cargar_lista("games.txt")
-    juegos_bd = obtener_juegos_bd(cur)
+    if conn is not None:
+        cur = conn.cursor()
 
-    existentes = []
-    faltantes = []
+        lista = cargar_lista("games.txt")
+        juegos_bd = obtener_juegos_bd(cur)
 
-    for nombre in lista:
-        key = normalizar_nombre(nombre)
-        if key in juegos_bd:
-            existentes.append((nombre, juegos_bd[key]))
-        else:
-            faltantes.append(nombre)
+        existentes = []
+        faltantes = []
 
-    # Guardar faltantes
-    with open("juegos_faltantes.txt", "w", encoding="utf-8") as f:
-        for j in faltantes:
-            f.write(j + "\n")
+        for nombre in lista:
+            key = normalizar_nombre(nombre)
+            if key in juegos_bd:
+                existentes.append((nombre, juegos_bd[key]))
+            else:
+                faltantes.append(nombre)
 
-    print(f"\n📊 RESUMEN")
-    print(f"Total lista: {len(lista)}")
-    print(f"En BD: {len(existentes)}")
-    print(f"NO en BD: {len(faltantes)}")
-    
-    # Ver cuántos steamid se encontraron o no
-    
-    nombres_existentes = [nombre for nombre, _ in existentes]
-    found_appids, games_without_id = resolver_appids(nombres_existentes)
+        # Guardar faltantes
+        with open("juegos_faltantes.txt", "w", encoding="utf-8") as f:
+            for j in faltantes:
+                f.write(j + "\n")
 
-    print("\n📊 REPORTE STEAM")
-    print(f"Juegos con SteamID: {len(found_appids)}")
-    print(f"Juegos SIN SteamID: {len(games_without_id)}")
-    print("-" * 50)
-    
-    # Procesar existentes con appid
-    mapa_juegos_bd = {nombre: id_juego for nombre, id_juego in existentes}
-    
-    for game in found_appids:
-        nombre = game["name"]
-        id_juego = mapa_juegos_bd.get(nombre)
+        print(f"\nRESUMEN")
+        print(f"Total lista: {len(lista)}")
+        print(f"En BD: {len(existentes)}")
+        print(f"NO en BD: {len(faltantes)}")
 
-        if not id_juego:
-            print(f"⚠ Juego no encontrado en BD: {nombre}")
-            continue
+        # Ver cuántos steamid se encontraron o no
 
-        details, status = get_appDetail(game["appid"])
+        nombres_existentes = [nombre for nombre, _ in existentes]
+        found_appids, games_without_id = resolver_appids(nombres_existentes)
 
-        if not details:
-            print(f"⚠ No Steam data para {nombre}: {status}")
-            print("*" * 50)
-            continue
+        print("\nREPORTE STEAM")
+        print(f"Juegos con SteamID: {len(found_appids)}")
+        print(f"Juegos SIN SteamID: {len(games_without_id)}")
+        print("-" * 50)
 
-        procesar_juego(nombre, id_juego, cur, conn, details)
+        # Procesar existentes con appid
+        mapa_juegos_bd = {nombre: id_juego for nombre, id_juego in existentes}
 
-    cur.close()
-    conn.close()
-    print("✅ FIN")
+        for game in found_appids:
+            nombre = game["name"]
+            id_juego = mapa_juegos_bd.get(nombre)
 
+            if not id_juego:
+                print(f"Juego no encontrado en BD: {nombre}")
+                continue
+
+            details, status = get_appDetail(game["appid"])
+
+            if not details:
+                print(f"No Steam data para {nombre}: {status}")
+                print("*" * 50)
+                continue
+
+            procesar_juego(nombre, id_juego, cur, conn, details)
+
+        cur.close()
+        conn.close()
+        print("FIN")
+    else:
+        print("No es posible conectarse a la Base de Datos")
 
 if __name__ == "__main__":
     main()

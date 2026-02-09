@@ -1,15 +1,25 @@
+import os
+from dotenv import load_dotenv
 import psycopg2
 import unicodedata
 from game_loader import normalizar_nombre
 
 def conectar():
-    return psycopg2.connect(
-        host="localhost",
-        database="marmota",
-        user="postgres",
-        password="1234",
-        port="5432"
-    )
+    load_dotenv()
+
+    try:
+        conexion = psycopg2.connect(
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASS"),
+            port=os.getenv("DB_PORT")
+        )
+        return conexion
+
+    except (Exception, psycopg2.Error) as error:
+        print(f"Error al intentar conectar a la Base de Datos: {error}")
+        return None
 
 def cargar_juegos_bd(cur):
     cur.execute('SELECT "idJuego", nombre FROM "JUEGO";')
@@ -64,7 +74,7 @@ def obtener_o_crear_genero(cur, genero):
     return cur.fetchone()[0]
 
 def procesar_juego(nombre, id_juego, cur, conn, game):
-    print(f"🎮 Procesando: {nombre} (idJuego={id_juego})")
+    print(f" Procesando: {nombre} (idJuego={id_juego})")
 
     try:
         # ID
@@ -76,17 +86,17 @@ def procesar_juego(nombre, id_juego, cur, conn, game):
             """, (game["appid"], id_juego))
         # DESCRIPCIÓN    
         if game.get("short_description"):
-            print("📝 Insertando descripción")
+            print(" Insertando descripción")
             cur.execute("""
                 UPDATE "JUEGO"
                 SET descripcion = %s
                 WHERE "idJuego" = %s;
             """, (game["short_description"], id_juego))
         else:
-            print("⚠ Problema con la descripción")
+            print(" Problema con la descripción")
         # FECHA
         if game.get("release_date"):
-            print("📅 Insertando fecha")
+            print(" Insertando fecha")
             cur.execute("""
                 UPDATE "DETALLEJUEGO"
                 SET "fechaLanzamiento" = %s
@@ -110,7 +120,7 @@ def procesar_juego(nombre, id_juego, cur, conn, game):
             if row:
                 id_clasif = row[0]
             else:
-                print(f"⚠ Clasificación de edad no existe: {nombre_clasif} → usando default")
+                print(f" Clasificación de edad no existe: {nombre_clasif} → usando default")
                 id_clasif = ID_SIN_CLASIF
         else:
             print("ℹ Sin clasificación de edad desde API → usando default")
@@ -123,7 +133,7 @@ def procesar_juego(nombre, id_juego, cur, conn, game):
         """, (id_juego,))
 
         if cur.fetchone():
-            print(f"↩ El juego ya tiene clasificación de edad, se omite")
+            print(f" El juego ya tiene clasificación de edad, se omite")
         else:
             cur.execute("""
                 INSERT INTO "CLASIFICAJUEGO" ("fkClasificacion", "fkJuego")
@@ -139,12 +149,12 @@ def procesar_juego(nombre, id_juego, cur, conn, game):
                 VALUES (%s, %s)
                 ON CONFLICT DO NOTHING;
             """, (id_juego, id_genero))
-        print("📚 Género encontrado")
+        print(" Género encontrado")
         conn.commit()
-        print(f"✅ Juego procesado OK: {nombre}")
+        print(f" Juego procesado OK: {nombre}")
         print("*" * 40)
 
     except Exception as e:
         conn.rollback()
-        print(f"❌ ERROR procesando {nombre}: {e}")
+        print(f" ERROR procesando {nombre}: {e}")
         
